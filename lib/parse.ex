@@ -66,16 +66,16 @@ defmodule Wbxml.Parse do
 
         current_byte == Wbxml.GlobalTokens.end_i() ->
           if current_node != nil and length(parent_nodes) >= 1 do
-              parent_nodes = Enum.drop(parent_nodes, -1)
-              if parent_nodes == [] do
-                current_node
-              else
-                parent_nodes = replace_child(parent_nodes, current_node)
-                current_node = List.last(parent_nodes)
+            parent_nodes = Enum.drop(parent_nodes, -1)
 
-                decode_codepage(queue, parent_nodes, current_node, current_codepage)
-              end
+            if parent_nodes == [] do
+              current_node
+            else
+              parent_nodes = replace_child(parent_nodes, current_node)
+              current_node = List.last(parent_nodes)
 
+              decode_codepage(queue, parent_nodes, current_node, current_codepage)
+            end
           else
             raise "END global token encountered out of sequence"
           end
@@ -124,6 +124,7 @@ defmodule Wbxml.Parse do
           end
 
           new_node = xmlElement(name: String.to_atom(tag))
+
           if has_content do
             parent_nodes = parent_nodes ++ [new_node]
             current_node = new_node
@@ -133,8 +134,6 @@ defmodule Wbxml.Parse do
             current_node = List.last(parent_nodes)
             decode_codepage(queue, parent_nodes, current_node, current_codepage)
           end
-
-
       end
     end
   end
@@ -180,17 +179,19 @@ defmodule Wbxml.Parse do
             {default_codepage, nil}
           end
 
-        new_name = if local != "" do
-          local
-        else
-          name
-        end
+        new_name =
+          if local != "" do
+            local
+          else
+            name
+          end
 
-        prefix = if prefix == "" and default_codepage == -1 do
-          name
-        else
-          prefix
-        end
+        prefix =
+          if prefix == "" and default_codepage == -1 do
+            name
+          else
+            prefix
+          end
 
         {type, current_codepage} =
           set_codepage_by_namespace(prefix, current_codepage, default_codepage)
@@ -206,18 +207,21 @@ defmodule Wbxml.Parse do
           end
 
         token =
-            Wbxml.Parse.__codepage__()
-            |> Enum.at(current_codepage)
-            |> Wbxml.CodePage.get_token(new_name)
+          Wbxml.Parse.__codepage__()
+          |> Enum.at(current_codepage)
+          |> Wbxml.CodePage.get_token(new_name)
 
         token = if length(content) > 0, do: bor(token, 0x40), else: token
         charlists = charlists ++ [token]
 
         if length(content) > 0 do
-          {charlists, _current_codepage, _default_codepage } =
+          {charlists, _current_codepage, _default_codepage} =
             List.foldl(content, {charlists, current_codepage, default_codepage}, fn node, acc ->
               {charlists, current_codepage, default_codepage} = acc
-              {node_charlists, node_current_codepage, node_default_codepage} = encode_node(node, current_codepage, default_codepage)
+
+              {node_charlists, node_current_codepage, node_default_codepage} =
+                encode_node(node, current_codepage, default_codepage)
+
               {charlists ++ node_charlists, node_current_codepage, node_default_codepage}
             end)
 

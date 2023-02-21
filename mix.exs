@@ -19,7 +19,7 @@ defmodule Wbxml.MixProject do
     ]
   end
 
-  defp  description() do
+  defp description() do
     "A wbxml library."
   end
 
@@ -33,5 +33,4 @@ defmodule Wbxml.MixProject do
       links: %{"GitHub" => "https://github.com/cisiqo/wbxml"}
     ]
   end
-
 end
