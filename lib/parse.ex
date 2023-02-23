@@ -179,19 +179,8 @@ defmodule Wbxml.Parse do
             {default_codepage, nil}
           end
 
-        new_name =
-          if local != "" do
-            local
-          else
-            name
-          end
-
-        prefix =
-          if prefix == "" and default_codepage == -1 do
-            name
-          else
-            prefix
-          end
+        new_name = if local != "", do: local, else: name
+        prefix = if prefix == "" and default_codepage == -1, do: name, else: prefix
 
         {type, current_codepage} =
           set_codepage_by_namespace(prefix, current_codepage, default_codepage)
