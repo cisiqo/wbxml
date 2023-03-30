@@ -10,7 +10,7 @@ by adding `wbxml` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:wbxml, "~> 0.1.0"}
+    {:wbxml, "~> 0.1.1"}
   ]
 end
 ```
