@@ -26,6 +26,11 @@ defmodule Wbxml.Parse do
     Record.extract(:xmlAttribute, from_lib: "xmerl/include/xmerl.hrl")
   )
 
+  Record.defrecord(
+    :xmlNamespace,
+    Record.extract(:xmlNamespace, from_lib: "xmerl/include/xmerl.hrl")
+  )
+
   def decode(bytes) do
     bytes_queue = Wbxml.Queue.put(bytes)
     {version, bytes_queue} = Wbxml.Queue.get(bytes_queue)
@@ -49,7 +54,7 @@ defmodule Wbxml.Parse do
     :unicode.characters_to_binary(xml)
   end
 
-  defp decode_codepage(queue, parent_nodes \\ [], current_node \\ nil, current_codepage \\ 0) do
+  defp decode_codepage(queue, parent_nodes \\ [], current_node \\ nil, current_codepage \\ 0, default_codepage \\ -1) do
     if :queue.len(queue) > 0 do
       {current_byte, queue} = Wbxml.Queue.dequeue_multibyte_int(queue)
 
@@ -59,7 +64,7 @@ defmodule Wbxml.Parse do
 
           if new_codepage > 0 and new_codepage < 25 do
             current_codepage = new_codepage
-            decode_codepage(queue, parent_nodes, current_node, current_codepage)
+            decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
           else
             raise "Unknown code page ID #{new_codepage} encountered in WBXML"
           end
@@ -74,7 +79,7 @@ defmodule Wbxml.Parse do
               parent_nodes = replace_child(parent_nodes, current_node)
               current_node = List.last(parent_nodes)
 
-              decode_codepage(queue, parent_nodes, current_node, current_codepage)
+              decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
             end
           else
             raise "END global token encountered out of sequence"
@@ -89,7 +94,7 @@ defmodule Wbxml.Parse do
           new_node_child = current_node_child ++ [text_node]
           current_node = xmlElement(current_node, content: new_node_child)
 
-          decode_codepage(queue, parent_nodes, current_node, current_codepage)
+          decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
 
         current_byte == Wbxml.GlobalTokens.str_i() ->
           {text, queue} = Wbxml.Queue.dequeue_string(queue)
@@ -99,7 +104,7 @@ defmodule Wbxml.Parse do
           new_node_child = current_node_child ++ [text_node]
           current_node = xmlElement(current_node, content: new_node_child)
 
-          decode_codepage(queue, parent_nodes, current_node, current_codepage)
+          decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
 
         Enum.member?(Wbxml.GlobalTokens.unused_array(), current_byte) ->
           raise "Encountered unknown global token: #{current_byte}"
@@ -123,16 +128,17 @@ defmodule Wbxml.Parse do
             raise "UNKNOWN TAG #{token}."
           end
 
+          default_codepage = if default_codepage == -1, do: current_codepage, else: default_codepage
           new_node = xmlElement(name: String.to_atom(tag))
 
           if has_content do
             parent_nodes = parent_nodes ++ [new_node]
             current_node = new_node
-            decode_codepage(queue, parent_nodes, current_node, current_codepage)
+            decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
           else
             parent_nodes = replace_child(parent_nodes, new_node)
             current_node = List.last(parent_nodes)
-            decode_codepage(queue, parent_nodes, current_node, current_codepage)
+            decode_codepage(queue, parent_nodes, current_node, current_codepage, default_codepage)
           end
       end
     end
@@ -165,6 +171,12 @@ defmodule Wbxml.Parse do
         content = xmlElement(element, :content)
         attributes = xmlElement(element, :attributes)
         name = xmlAttribute(element, :name) |> Atom.to_string()
+        namespace = xmlElement(element, :namespace)
+        ns = xmlNamespace(namespace, :default)
+
+        if attributes == [] and ns == [] do
+          raise "No namespace specified"
+        end
 
         {prefix, local} =
           case xmlElement(element, :nsinfo) do
@@ -172,15 +184,8 @@ defmodule Wbxml.Parse do
             {prefix, local} -> {List.to_string(prefix), List.to_string(local)}
           end
 
-        {default_codepage, _codepage_xmlns} =
-          if length(attributes) > 0 do
-            encode_attrabutes(attributes)
-          else
-            {default_codepage, nil}
-          end
-
+        default_codepage = index_codepage(Wbxml.Parse.__codepage__(), Atom.to_string(ns))
         new_name = if local != "", do: local, else: name
-        prefix = if prefix == "" and default_codepage == -1, do: name, else: prefix
 
         {type, current_codepage} =
           set_codepage_by_namespace(prefix, current_codepage, default_codepage)
@@ -234,32 +239,6 @@ defmodule Wbxml.Parse do
     end
   end
 
-  defp encode_attrabutes(attributes) do
-    [head | tail] = attributes
-    value = xmlAttribute(head, :value)
-    name = xmlAttribute(head, :name)
-
-    {prefix, local} =
-      case xmlAttribute(head, :nsinfo) do
-        [] -> {"", ""}
-        {prefix, local} -> {prefix, local}
-      end
-
-    codepage_index = index_codepage(Wbxml.Parse.__codepage__(), List.to_string(value))
-
-    cond do
-      String.upcase(Atom.to_string(name)) == "XMLNS" ->
-        {codepage_index, nil}
-
-      String.upcase(prefix) == "XMLNS" ->
-        codepage_xmlns = local
-        {nil, codepage_xmlns}
-
-      true ->
-        encode_attrabutes(tail)
-    end
-  end
-
   defp set_codepage_by_namespace(namespace, current_codepage, default_codepage) do
     if namespace == "" do
       case current_codepage do
@@ -292,7 +271,7 @@ defmodule Wbxml.Parse do
       raise "Unknown xmlns: #{namespace}"
     end
 
-    if String.upcase(Map.get(codepage, :xmlns)) == String.upcase(namespace) do
+    if String.upcase(Map.get(codepage, :xmlns)) == String.upcase(namespace) or String.upcase(Map.get(codepage, :namespace)) == String.upcase(namespace) do
       i
     else
       index_codepage(list, namespace, i + 1)

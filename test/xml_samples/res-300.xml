@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Provision xmlns="Provision:"><DeviceInformation xmlns="Settings:"><Set><Model>Samsung</Model><OS>Android 8.1.0</OS><UserAgent>Samsung/Android-8.1.0</UserAgent></Set></DeviceInformation><Policies><Policy><PolicyType>MS-EAS-Provisioning-WBXML</PolicyType></Policy></Policies></Provision>

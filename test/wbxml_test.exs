@@ -3,7 +3,7 @@ defmodule WbxmlTest do
   doctest Wbxml
 
   test "decode wbxml request 120" do
-    {ok, bytes} = File.read("test/wbxml_samples/request-120.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/request-120.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -11,7 +11,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 151" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-151.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-151.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -19,7 +19,7 @@ defmodule WbxmlTest do
   end
 
   test "encode wbxml response 151" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-151.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-151.wbxml")
 
     xml =
       "<Sync xmlns='airsync'><Collections><Collection><SyncKey>1509029063</SyncKey><CollectionId>7</CollectionId><Status>1</Status></Collection></Collections></Sync>"
@@ -29,7 +29,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 277" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-277.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-277.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -37,7 +37,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 884" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-884.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-884.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -45,7 +45,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 1858" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-1858.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-1858.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -53,7 +53,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 3786" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-3786.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-3786.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -61,7 +61,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 4148" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-4148.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-4148.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -69,7 +69,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 4569" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-4569.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-4569.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -77,7 +77,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 6318" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-6318.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-6318.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -85,7 +85,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 6801" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-6801.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-6801.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -93,7 +93,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 7407" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-7407.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-7407.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -101,7 +101,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 8661" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-8661.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-8661.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -109,7 +109,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 9104" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-9104.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-9104.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -117,7 +117,7 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 9542" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-9542.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-9542.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
@@ -125,10 +125,31 @@ defmodule WbxmlTest do
   end
 
   test "decode wbxml response 9777" do
-    {ok, bytes} = File.read("test/wbxml_samples/response-9777.wbxml")
+    {:ok, bytes} = File.read("test/wbxml_samples/response-9777.wbxml")
     xml = Wbxml.decode(bytes)
 
     assert xml ==
              "<FolderSync><Status>1</Status><SyncKey>1</SyncKey><Changes><Count>0</Count></Changes></FolderSync>"
+  end
+
+  test "xml file encode 100" do
+    {:ok, xml} = File.read("test/xml_samples/res-100.xml")
+    {:ok, wbxml_bytes} = File.read("test/xml_samples/res-100-1.wbxml")
+
+    assert Wbxml.encode(xml) == wbxml_bytes
+  end
+
+  test "xml file encode 200" do
+    {:ok, xml} = File.read("test/xml_samples/res-200.xml")
+    {:ok, wbxml_bytes} = File.read("test/xml_samples/res-200-1.wbxml")
+
+    assert Wbxml.encode(xml) == wbxml_bytes
+  end
+
+  test "xml file encode 300" do
+    {:ok, xml} = File.read("test/xml_samples/res-300.xml")
+    {:ok, wbxml_bytes} = File.read("test/xml_samples/res-300-1.wbxml")
+
+    assert Wbxml.encode(xml) == wbxml_bytes
   end
 end
