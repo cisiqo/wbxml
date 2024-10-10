@@ -152,4 +152,31 @@ defmodule WbxmlTest do
 
     assert Wbxml.encode(xml) == wbxml_bytes
   end
+
+  test "Namespace declaration simple" do
+    xml =
+      "<Provision xmlns:provision=\"Provision:\"></Provision>"
+    Wbxml.encode(xml)
+  end
+
+  test "Namespace declaration" do
+    xml =
+      """
+      <airsync:Sync xmlns:airsync="AirSync:" xmlns:calendar="Calendar:" xmlns:email="Email:" xmlns:airsyncbase="AirSyncBase:">
+        <airsync:Collections>
+          <airsync:Collection>
+            <airsync:SyncKey>0</airsync:SyncKey>
+            <airsync:CollectionId>1</airsync:CollectionId>
+            <airsync:Options>
+            <airsync:FilterType>0</airsync:FilterType>
+            <airsyncbase:BodyPreference>
+            <airsyncbase:Type>1</airsyncbase:Type>
+            </airsyncbase:BodyPreference>
+            </airsync:Options>
+          </airsync:Collection>
+        </airsync:Collections>
+      </airsync:Sync>
+      """
+    Wbxml.encode(xml)
+  end
 end

@@ -174,21 +174,23 @@ defmodule Wbxml.Parse do
         namespace = xmlElement(element, :namespace)
         ns = xmlNamespace(namespace, :default)
 
-        if attributes == [] and ns == [] do
-          raise "No namespace specified"
-        end
-
         {prefix, local} =
           case xmlElement(element, :nsinfo) do
             [] -> {"", ""}
             {prefix, local} -> {List.to_string(prefix), List.to_string(local)}
           end
 
-        default_codepage = index_codepage(Wbxml.Parse.__codepage__(), Atom.to_string(ns))
-        new_name = if local != "", do: local, else: name
+        default_codepage = if default_codepage == -1 do
+          case encode_attributes(attributes) do
+            {nil, codepage_xmlns} -> index_codepage(Wbxml.Parse.__codepage__(), codepage_xmlns)
+            {codepage_index, nil} -> codepage_index
+          end
+        else
+          default_codepage
+        end
 
-        {type, current_codepage} =
-          set_codepage_by_namespace(prefix, current_codepage, default_codepage)
+        new_name = if local != "", do: local, else: name
+        {type, current_codepage} = determine_codepage(prefix, ns, attributes, current_codepage, default_codepage)
 
         charlists =
           case type do
@@ -239,6 +241,52 @@ defmodule Wbxml.Parse do
     end
   end
 
+  defp determine_codepage(prefix, ns, attributes, current_codepage, default_codepage) do
+    cond do
+      prefix != "" -> set_codepage_by_namespace(prefix, current_codepage, default_codepage)
+      ns != [] -> set_codepage_by_namespace(Atom.to_string(ns), current_codepage, default_codepage)
+      attributes != [] ->
+        {_, codepage_xmlns} = encode_attributes(attributes)
+        set_codepage_by_namespace(codepage_xmlns, current_codepage, default_codepage)
+      true -> set_codepage_by_namespace(prefix, current_codepage, default_codepage)
+    end
+  end
+
+  defp encode_attributes(attributes) do
+    [head | tail] = attributes
+    value = xmlAttribute(head, :value)
+    name = xmlAttribute(head, :name)
+
+    value = if is_list(value), do: List.to_string(value)
+    name = cond do
+      is_atom(name) ->
+        Atom.to_string(name)
+      is_list(name) ->
+        List.to_string(name)
+      true -> name
+    end
+
+    {prefix, local} =
+      case xmlAttribute(head, :nsinfo) do
+        [] -> {"", ""}
+        {prefix, local} -> {List.to_string(prefix), List.to_string(local)}
+      end
+
+    codepage_index = index_codepage(Wbxml.Parse.__codepage__(), value)
+
+    cond do
+      String.upcase(name) == "XMLNS" ->
+        {codepage_index, nil}
+
+      String.upcase(prefix) == "XMLNS" ->
+        codepage_xmlns = local
+        {nil, codepage_xmlns}
+
+      true ->
+        encode_attributes(tail)
+    end
+  end
+
   defp set_codepage_by_namespace(namespace, current_codepage, default_codepage) do
     if namespace == "" do
       case current_codepage do
@@ -250,12 +298,11 @@ defmodule Wbxml.Parse do
           {true, current_codepage}
       end
     else
-      codepage_namespace =
+      codepage =
         Wbxml.Parse.__codepage__()
         |> Enum.at(current_codepage)
-        |> Map.get(:xmlns)
 
-      if String.upcase(codepage_namespace) == String.upcase(namespace) do
+      if String.upcase(Map.get(codepage, :xmlns)) == String.upcase(namespace) or String.upcase(Map.get(codepage, :namespace)) == String.upcase(namespace) do
         {false, current_codepage}
       else
         current_codepage = index_codepage(Wbxml.Parse.__codepage__(), namespace)
